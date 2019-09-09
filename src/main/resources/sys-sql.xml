@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sqlGroup name="sys">
+	<sql id="getFuncList">
+		select mf.*
+		from sys_function mf
+		inner join sys_role_func rf on rf.func_id = mf.func_id
+		where mf.func_type=? and rf.role_id=? and mf.state=1
+		order by mf.func_code
+	</sql>
+</sqlGroup>
+

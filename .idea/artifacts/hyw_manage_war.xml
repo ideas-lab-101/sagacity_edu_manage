@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="hyw_manage:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="hyw-manage.war">
+      <element id="artifact" artifact-name="hyw_manage:war exploded" />
+    </root>
+  </artifact>
+</component>

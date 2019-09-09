@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>角色权限表</title>
+    <link rel="stylesheet" href="/asset/layui/css/layui.css">
+
+    <style>
+        body{padding: 2px 5px; /*overflow-y: scroll;*/}
+    </style>
+</head>
+<body>
+
+<table id="roleFuncList" lay-filter="roleFuncList"></table>
+<script type="text/html" id="switchTpl">
+    <input type="checkbox" name="state" value="{{d.func_id}}" lay-skin="switch" lay-text="启用|停用" lay-filter="stateFilter" {{ d.mapping_id == 0 ? '' : 'checked' }}>
+</script>
+
+
+<script src="/asset/layui/layui.js" charset="utf-8"></script>
+<script src="/asset/js/tools.js" charset="utf-8"></script>
+<script>
+    var role_id = #(roleInfo.role_id);
+    var layer, treeGrid, form, $;
+    layui.config({
+        base: '/asset/layui/extend/' //这是自定义模块的路径了
+    }).use(['layer', 'treeGrid', 'form'], function(){
+        layer = layui.layer;
+        treeGrid = layui.treeGrid;
+        form = layui.form;
+        $ = layui.$;
+
+        treeGrid.render({
+            id:'roleFuncList'
+            ,elem: '#roleFuncList'
+            ,url: 'getRoleFunc?roleId='+role_id
+            ,page: false
+            ,parseData: function(res){ //res 即为原始返回的数据
+                return {
+                    "code": res.code==1?0:res.code, //解析接口状态
+                    "msg": res.message, //解析提示文本
+                    "count": res.data.totalRow, //解析数据长度
+                    "data": res.data.list //解析数据列表
+                };
+            }
+            ,idField:'func_id'
+            ,treeId:'func_id'//树形id字段名称
+            ,treeUpId:'p_id'//树形父id字段名称
+            ,treeShowName:'func_name'//以树形式显示的字段
+            ,cols: [[
+                {field:'func_name', title:'资源名称', width:200, fixed: 'left'}
+                ,{field:'func_id', title:'ID', width:60, unresize: true}
+                ,{field:'func_code', title:'资源编码', width:180}
+                ,{field:'state', title:'授权', width:95, templet: '#switchTpl', unresize: true}
+            ]]
+        });
+
+        //监听性别操作
+        form.on('switch(stateFilter)', function(obj){
+            // layer.tips(this.value + ' ' + this.name + '：'+ obj.elem.checked, obj.othis);
+            $.ajax({
+                url: "setRoleFunc",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    roleId: role_id,
+                    funcId: this.value,
+                    state: obj.elem.checked
+                },
+                success: function(data) {
+                    layer.msg(data.msg, {time:1000});
+                }
+            });
+            // layer.close();
+        });
+
+    });
+
+</script>
+</body>
+</html>

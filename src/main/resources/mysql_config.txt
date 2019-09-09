@@ -1,0 +1,5 @@
+jdbcUrl = jdbc:mysql://127.0.0.1/hyw_base?zeroDateTimeBehavior=convertToNull&autoReconnect=true&rewriteBatchedStatements=true&useSSL=false
+user = root
+password = sagacity
+
+devMode = true

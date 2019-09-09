@@ -1,0 +1,4 @@
+127.0.0.1 - - [05/Sep/2019:22:27:57 +0800] "GET /login.html HTTP/1.1" 200 10007 http-bio-8080-exec-1 197
+127.0.0.1 - - [05/Sep/2019:22:27:59 +0800] "GET /scanLogin?key=1567693679000 HTTP/1.1" 200 61 http-bio-8080-exec-2 14
+127.0.0.1 - - [05/Sep/2019:22:28:05 +0800] "GET /captcha HTTP/1.1" 200 1679 http-bio-8080-exec-3 7903
+127.0.0.1 - - [05/Sep/2019:22:28:05 +0800] "GET /asset/image/hyw-logo.ico HTTP/1.1" 404 590 http-bio-8080-exec-5 651

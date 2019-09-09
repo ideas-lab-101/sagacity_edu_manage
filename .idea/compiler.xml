@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="edu_manage" />
+        <module name="hyw_manage" />
+        <module name="jfinal-ext" />
+        <module name="sagacity-utility" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="edu_manage" target="1.7" />
+      <module name="hyw_manage" target="1.7" />
+      <module name="jfinal-ext" target="1.7" />
+      <module name="sagacity-base" target="1.7" />
+      <module name="sagacity-utility" target="1.7" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

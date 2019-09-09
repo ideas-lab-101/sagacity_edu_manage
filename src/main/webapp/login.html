@@ -1,0 +1,209 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link rel="icon" href="/asset/image/hyw-logo.ico">
+
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>平台登录</title>
+    <link rel="stylesheet" href="/asset/layui/css/layui.css" media="all">
+    <!--<link href="/asset/font-awesome/css/font-awesome.min.css" rel="stylesheet">-->
+    <link href="/asset/font-icon/font_icon_sagacity.css" rel="stylesheet">
+    <link rel="stylesheet" href="/asset/css/login.css" media="all">
+</head>
+<body class="layui-layout-body bg">
+    <div class="layui-layout">
+
+        <div class="login layui-anim layui-anim-fadein">
+            <div class="layui-container">
+                <div class="layui-row">
+                    <div class="layui-col-md2" style="text-align:center; border-right:1px dashed #000; height:260px;">
+                        <h1 style="margin-top: 20px;">教育应用平台</h1>
+                        <img class="logo layui-icon-logo" src="asset/image/hyw-logo.png" alt=""/>
+                    </div>
+                    <div class="layui-col-md5" style="margin-left: 15px; margin-right: 15px;">
+                        <div class="layui-tab layui-tab-brief" lay-filter="mode">
+                            <ul class="layui-tab-title">
+                                <li lay-id="account" class="layui-this">账号登陆</li>
+                                <li lay-id="qrcode">扫码登陆</li>
+                            </ul>
+                            <div class="layui-tab-content">
+                                <div class="layui-tab-item layui-show">
+                                    <div class="layui-form">
+                                        <div class="layui-form-item">
+                                            <span style="display: inline-block;"><i class="iconfont icon-accountcircle"></i></span>
+                                            <input class="layui-input" style="display:inline; width: 80%;" type="text" id="username" lay-verify="required" placeholder="请输入账号" autocomplete="off"  value="">
+                                        </div>
+                                        <div class="layui-form-item">
+                                            <span style="display: inline-block;"><i class="iconfont icon-lock-open"></i></span>
+                                            <input class="layui-input" style="display:inline; width: 80%;" type="password" id="password" lay-verify="required" placeholder="请输入密码" autocomplete="off" value="">
+                                        </div>
+                                        <div class="layui-form-item">
+                                            <span style="display: inline-block;"><i class="iconfont icon-key"></i></span>
+                                            <input type="text" id="capval" style="display:inline; width: 160px;" class="layui-input" required lay-verify="required" placeholder="验证码" maxlength="4" minlength="4"/>
+                                            <img id="captchaImg" alt="验证码" style="display: inline;" src="captcha" onclick ="this.src='/captcha?'+Math.random()">
+                                        </div>
+                                        <div class="layui-form-item">
+                                            <div class="layui-inline">
+                                                <button style="display: inline-block; vertical-align: middle;" class="layui-btn login_btn" onclick="login()">登陆系统</button>
+                                            </div>
+                                            <div class="layui-inline">
+                                                <label class="layui-form-label">记住账号</label>
+                                                <div class="layui-input-block">
+                                                    <input type="checkbox" id="ck_rmbUser" lay-skin="switch" lay-text="ON|OFF">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-tab-item">
+                                    <div style="margin-top: 10px;" id="qrCode"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/asset/layui/layui.js" charset="utf-8"></script>
+    <script src="/asset/jquery/jquery-2.1.4.min.js"></script>
+    <script type="text/javascript" src="/asset/jquery/jquery.cookie.js"></script>
+    <script type="text/javascript" src="/asset/jquery/jquery.qrcode.min.js"></script>
+    <script type="text/javascript">
+
+        var layer, form, element;
+        layui.use(['layer','form', 'element'], function(){
+            layer = layui.layer; //弹层
+            form = layui.form;
+            element = layui.element;
+
+            element.on('tab(mode)', function(){
+                mode = this.getAttribute('lay-id');
+                if(mode == 'qrcode'){
+                    key = Date.parse( new Date());
+                    //二维码字符串
+                    var qrCodeString = '{ "type":"login", "key":"'+key+'"}';
+
+                    jQuery('#qrCode').qrcode({
+                        render   : "canvas",
+                        text     :  qrCodeString,
+                        width : 180,
+                        height : 180
+                    });
+                    is_close = false;
+                    //启动timer
+                    checkScan();
+                }else{
+                    document.getElementById("qrCode").innerHTML="";
+                    is_close = true;
+                    clearTimeout(checkTimer);
+                }
+            });
+        })
+
+        function login() {
+            setCookie();
+            $.ajax({
+                url: "login",
+                type: "GET",
+                dataType: "json",
+                data: {
+                    loginName : $("#username").val(),
+                    password : $("#password").val(),
+                    capval: $("#capval").val()
+                },
+                success: function(data) {
+                    if (data.code == 1) {
+                        window.open("index", "_self", "");
+                    }else{
+                        layer.msg(data.msg, {time:2000, offset: '100px'});
+                    }
+                }
+            });
+        }
+
+        var checkTimer;
+        var is_close = false;
+        var key;
+
+        var checkScan = function() {
+            if (is_close) return false;
+            $.ajax({
+                url: "scanLogin",
+                type: "GET",
+                dataType: "json",
+                data: {
+                    key: key
+                },
+                success: function (data) {
+                    if (data.code ==1) {
+                        $.ajax({
+                            url: "login",
+                            type: "POST",
+                            dataType: "json",
+                            data: {
+                                username: data.user.login_name,
+                                password: data.user.password
+                            },
+                            success: function (data) {
+                                if (data.code == 1) {
+                                    window.open("index", "_self", "");
+                                } else {
+                                    layer.msg(data.msg, {time: 2000, offset: '100px'});
+                                }
+                            }
+                        });
+                    } else {
+                        checkTimer = setTimeout(function () {
+                            checkScan();
+                        }, 1000)
+
+                    }
+                },
+                fail: function (data) {
+                    checkScan();
+                }
+            });
+        }
+
+
+        function setCookie() {
+            if ($("#ck_rmbUser").prop("checked")) {
+                var username = $("#username").val();
+                var password = $("#password").val();
+                $.cookie("hyw_rmbUser", "true", { expires: 7 }); //存储一个带7天期限的cookie
+                $.cookie("hyw_username", username, { expires: 7 });
+                $.cookie("hyw_password", password, { expires: 7 });
+            }else{
+                $.cookie("hyw_rmbUser", "false", { expire: -1 });
+                $.cookie("hyw_username", "", { expires: -1 });
+                $.cookie("hyw_password", "", { expires: -1 });
+            }
+        }
+
+        $(document).ready(function() {
+            if ($.cookie("hyw_rmbUser") == "true") {
+                $("#ck_rmbUser").prop("checked", true);
+                $("#username").val($.cookie("hyw_username"));
+                $("#UserFont").css('display','none');
+                $("#password").val($.cookie("hyw_password"));
+                $("#PasswordFont").css('display','none');
+            }
+
+            document.onkeydown = function(e) {
+                // 兼容FF和IE和Opera
+                var theEvent = e || window.event;
+                var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+                if (code == 13 && (document.activeElement.type == 'text' || document.activeElement.type == 'password')) {
+                    login(); //要触发的方法
+                    return false;
+                }
+                return true;
+            }
+        });
+
+    </script>
+</body>
+</html>

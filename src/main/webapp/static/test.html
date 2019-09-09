@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>测试页面</title>
+    <link rel="stylesheet" href="/asset/layui/css/layui.css">
+    <link href="/asset/layui/extend/city-picker/city-picker.css" rel="stylesheet" />
+    <style>
+        body{
+            padding: 10px; /*overflow-y: scroll;*/
+        }
+    </style>
+    <script src="/asset/layui/extend/city-picker/city-picker.data.js"></script>
+</head>
+<body>
+    <div class="layui-form">
+        #if(shiro.hasPermission("91-01"))
+            <button class="layui-btn" onclick="clearAllAuth()">清除所有授权信息</button>
+        #end
+        #if(shiro.hasPermission("91-02"))
+            <button class="layui-btn" onclick="clearAuth()">清除当前用户授权信息</button>
+        #end
+        #if(shiro.hasPermission("91-03"))
+        <button class="layui-btn" onclick="clearAllSession()">清除所有用户Session</button>
+        #end
+    </div>
+
+    <script src="/asset/layui/layui.js" charset="utf-8"></script>
+    <script src="/asset/js/clipboard.min.js"></script>
+    <script>
+
+        var layer, table, form, $;
+        layui.use(['layer', 'table', 'form'], function() {
+                layer = layui.layer;
+                table = layui.table;
+                form = layui.form;
+                $ = layui.$;
+            });
+
+        function clearAllAuth() {
+            layer.confirm('确认此操作？', function (index) {
+                $.ajax({
+                    url: "clearAllAuth",
+                    type: "POST",
+                    dataType: "json",
+                    data: {},
+                    success: function (data) {
+                        layer.msg(data.msg);
+                    }
+                });
+                layer.close(index);
+            });
+        }
+        
+        function clearAuth() {
+            layer.confirm('确认此操作？', function (index) {
+                $.ajax({
+                    url: "clearAuth",
+                    type: "POST",
+                    dataType: "json",
+                    data: {},
+                    success: function (data) {
+                        layer.msg(data.msg);
+                    }
+                });
+                layer.close(index);
+            });
+        }
+
+        function clearAllSession() {
+            layer.confirm('确认此操作？', function (index) {
+                $.ajax({
+                    url: "clearAllSession",
+                    type: "POST",
+                    dataType: "json",
+                    data: {},
+                    success: function (data) {
+                        layer.msg(data.msg);
+                    }
+                });
+                layer.close(index);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>用户管理</title>
+    <link rel="stylesheet" href="/asset/layui/css/layui.css">
+
+    <style>
+        body{padding: 20px; /*overflow-y: scroll;*/}
+    </style>
+</head>
+<body>
+
+
+<table id="userList" lay-filter="userList"></table>
+<script type="text/html" id="switchTpl">
+    <input type="checkbox" name="state" value="{{d.user_id}}" lay-skin="switch" lay-text="启用|停用" lay-filter="stateFilter" {{ d.state == 1 ? 'checked' : '' }}>
+</script>
+
+<script type="text/html" id="toolbar">
+    #if(shiro.hasPermission("user:edit"))
+    <a class="layui-btn-sm" lay-event="edit">
+        <i class="layui-icon">&#xe642;</i></a>
+    #end
+    #if(shiro.hasRole("administrator"))
+    <a class="layui-btn-sm" lay-event="del">
+        <i class="layui-icon">&#xe640;</i></a>
+    #end
+    <a class="layui-btn-sm" lay-event="password">
+        <i class="layui-icon">&#xe673;</i></a>
+</script>
+
+<script src="/asset/layui/layui.js" charset="utf-8"></script>
+<script src="/asset/js/tools.js" charset="utf-8"></script>
+<script>
+
+    var layer, table, form, $;
+    layui.use(['layer', 'table', 'form'], function(){
+        layer = layui.layer;
+        table = layui.table;
+        form = layui.form;
+        $ = layui.$;
+
+        table.render({
+            id:'userList'
+            ,elem: '#userList'
+            ,url: 'getUserList'
+            ,page: true
+            ,request: {
+                pageName: 'pageIndex' //页码的参数名称，默认：page
+                ,limitName: 'pageSize' //每页数据量的参数名，默认：limit
+            }
+            ,parseData: function(res){ //res 即为原始返回的数据
+                return {
+                    "code": res.code==1?0:res.code, //解析接口状态
+                    "msg": res.message, //解析提示文本
+                    "count": res.data.totalRow, //解析数据长度
+                    "data": res.data.list //解析数据列表
+                };
+            }
+            ,limit: 10
+            ,cols: [[
+                {field:'user_id', title:'ID', width:60, fixed: 'left', unresize: true, sort: true}
+                ,{field:'caption', title:'用户名', width:180}
+                ,{field:'login_name', title:'登陆账号', width:200}
+                ,{field:'role_name', title:'账户角色', width:180}
+                ,{field:'add_time', title:'创建日期', width:160}
+                ,{field:'state', title:'状态', width:95, templet: '#switchTpl', unresize: true}
+                ,{fixed: 'right', title:'操作', toolbar: '#toolbar', width:150}
+            ]]
+        });
+
+        //监听表格复选框选择
+        table.on('checkbox(userList)', function(obj){
+            console.log(obj)
+        });
+
+        //监听性别操作
+        form.on('switch(stateFilter)', function(obj){
+            // layer.tips(this.value + ' ' + this.name + '：'+ obj.elem.checked, obj.othis);
+            $.ajax({
+                url: "setUserState",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    userID: this.value,
+                    state: obj.elem.checked
+                },
+                success: function(data) {
+                    layer.msg(data.msg, {time:1000});
+                }
+            });
+            // layer.close();
+        });
+
+        //监听单元格编辑
+        table.on('edit(userList)', function(obj){
+            var value = obj.value //得到修改后的值
+                ,data = obj.data //得到所在行所有键值
+                ,field = obj.field; //得到字段
+
+        });
+
+        //监听工具条
+        table.on('tool(userList)', function(obj){
+            var data = obj.data;
+            if(obj.event === 'edit'){//编辑
+                var url = 'editUser?userId='+data.user_id;
+                layer.open({
+                    title: '编辑用户',
+                    type: 2,
+                    area: ['760px', '410px'],
+                    content: [url, 'no'],
+                    cancel: function () {
+                        table.reload('userList');
+                    },
+                    end: function () {
+                        table.reload('userList');
+                    }
+                });
+            }else if(obj.event === 'del'){//删除
+                layer.confirm('确认删除此用户？', function(index){
+                    $.ajax({
+                        url: "delUser",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            userId: data.user_id
+                        },
+                        success: function(data) {
+                            if(data.code == 1){
+                                table.reload('userList');
+                            }else{
+                                layer.msg(data.msg);
+                            }
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+        });
+
+        //监听排序
+        table.on('sort(userList)', function(obj){
+            console.log(this, obj.field, obj.type)
+            return;
+            //服务端排序
+            // table.reload('docList', {
+            //   initSort: obj
+            //   //,page: {curr: 1} //重新从第一页开始
+            //   ,where: { //重新请求服务端
+            //     key: obj.field //排序字段
+            //     ,order: obj.type //排序方式
+            //   }
+            // });
+        });
+
+    });
+
+</script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>码表管理</title>
+    <link rel="stylesheet" href="/asset/layui/css/layui.css">
+    <style>
+        body{
+            padding: 3px; /*overflow-y: scroll;*/
+        }
+        #masterList li {padding: 3px 8px; cursor: pointer;}
+        #masterList li.active {background-color: #d2d2d2;}
+    </style>
+</head>
+<body>
+<div>
+    <div class="layui-row">
+        <div class="layui-col-md3">
+            <div class="layui-btn-group">
+                <a class="layui-btn layui-btn-primary layui-btn-sm" onclick="addData()">
+                    <i class="layui-icon">&#xe61f;</i>
+                </a>
+                <a class="layui-btn layui-btn-primary layui-btn-sm" onclick="editData()">
+                    <i class="layui-icon">&#xe642;</i>
+                </a>
+                <a class="layui-btn layui-btn-primary layui-btn-sm" onclick="delData()">
+                    <i class="layui-icon">&#xe640;</i>
+                </a>
+            </div>
+            <div class="layui-bg-gray layui-side-scroll"
+                 style="width: 99%; height: 435px; overflow:auto; margin-top: 2px;">
+                <ul class="flow-default" id="masterList"></ul>
+            </div>
+        </div>
+
+        <div class="layui-col-md9" style=" padding-left: 2px; bottom: 0; border-left: solid 2px #1AA094;" >
+            <div class="layui-btn-group">
+                <a class="layui-btn  layui-btn-sm" onclick="addDetailData()">
+                    <i class="layui-icon">&#xe654;</i>新增
+                </a>
+            </div>
+            <table id="detailList" lay-filter="detailList"></table>
+            <script type="text/html" id="switchTpl">
+                <input type="checkbox" name="state" value="{{d.detail_id}}" lay-skin="switch" lay-text="启用|停用" lay-filter="stateFilter" {{ d.state == 1 ? 'checked' : '' }}>
+            </script>
+            <script type="text/html" id="toolbar">
+                <a class="layui-btn-sm" lay-event="edit">
+                    <i class="layui-icon">&#xe642;</i></a>
+                <a class="layui-btn-sm" lay-event="del">
+                    <i class="layui-icon">&#xe640;</i></a>
+            </script>
+        </div>
+    </div>
+</div>
+
+<script src="/asset/layui/layui.js" charset="utf-8"></script>
+<script>
+    var sel_item = null;
+    var layer, flow, form, table, $;
+    layui.use(['layer', 'form', 'table', 'flow'], function(){
+        layer = layui.layer; //弹层
+        flow = layui.flow;
+        form = layui.form;
+        table = layui.table;
+        $ = layui.$;
+
+        flow.load({
+            elem: '#masterList' //流加载容器
+            ,scrollElem: '#masterList' //滚动条所在元素，一般不用填，此处只是演示需要。
+            ,done: function(page, next){ //执行下一页的回调
+
+                var lis = [];
+                $.ajax({
+                    url: "getEnumMaster",
+                    type: "GET",
+                    dataType: "json",
+                    data: {
+                        page: page
+                    },
+                    success: function(data) {
+                        for(var i = 0; i < data.data.list.length; i++){
+                            lis.push('<li data-item=\''+JSON.stringify(data.data.list[i])+'\'>' +
+                                '<i class="layui-icon" style="padding: 0 3px">&#xe655;</i>'+ data.data.list[i].master_name +'</li>')
+                        }
+                        next(lis.join(''), page < data.data.totalPage);//pages是后台返回的总页数
+
+                        $("#masterList li").click(function () {
+                            $("#masterList li").removeClass("active");
+                            $(this).addClass("active");
+                            sel_item = JSON.parse($(this).attr("data-item"));
+                            loadEnumDetail();
+                        })
+                    }
+                });
+            }
+        });
+
+    });
+
+    function addData() {
+
+        layer.prompt({
+            title: '新码表',
+            formType: 2
+        }, function(value, index){
+            //插入doc_page
+            $.ajax({
+                url: "addEnumMaster",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    name: value
+                },
+                success: function(data) {
+                    //刷新树
+                    if(data.code ==1){
+                        // location.reload();
+                        var node = '<li data-item=\''+JSON.stringify(data.data)+'\'>' +
+                            '<i class="layui-icon" style="padding: 0 3px">&#xe655;</i>'+ data.data.master_name +'</li>';
+                        $("#masterList").prepend(node);
+                        $("#masterList li").eq(0).click(function () {
+                            $("#masterList li").removeClass("active");
+                            $(this).addClass("active");
+                            sel_item = JSON.parse($(this).attr("data-item"));
+                            loadEnumDetail();
+                        })
+                    }
+                    layer.close(index);
+                }
+            });
+        });
+    }
+
+    function editData() {
+        if(sel_item == null){
+            layer.msg("请选择操作的码表！");
+            return;
+        }
+        layer.prompt({
+            title: '修改码表',
+            formType: 2
+            ,value: sel_item.master_name
+        }, function(value, index){
+            $.ajax({
+                url: "modifyEnumMaster",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    master_id: sel_item.master_id,
+                    name: value
+                },
+                success: function(data) {
+                    if(data.code == 1){
+                        //修改节点自身
+                        // location.reload();
+                        sel_item = data.data;
+                        var content = '<i class="layui-icon" style="padding: 0 3px">&#xe655;</i>'+ data.data.master_name;
+                        $("#masterList li.active").attr("data-item",JSON.stringify(data.data)).html(content);
+                    }
+                }
+            });
+            layer.close(index);
+        });
+    }
+
+    function delData() {
+        if(sel_item == null){
+            layer.msg("请选择操作的码表！");
+            return;
+        }
+        layer.confirm('确定删除?', {icon: 3, title:'提示'}, function(index){
+            //do something
+            $.ajax({
+                url: "delEnumMaster",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    master_id: sel_item.master_id
+                },
+                success: function(data) {
+                    if(data.code == 1){
+                        //删除节点自身
+                        // location.reload();
+                        $("#masterList li.active").remove();
+                    }else{
+                        layer.msg(data.msg);
+                    }
+                }
+            });
+            layer.close(index);
+        });
+    }
+
+    function loadEnumDetail() {
+        table.render({
+            id:'detailList'
+            ,elem: '#detailList'
+            ,url: 'getEnumDetail'
+            ,page: true
+            ,request: {
+                pageName: 'pageIndex' //页码的参数名称，默认：page
+                ,limitName: 'pageSize' //每页数据量的参数名，默认：limit
+            }
+            ,parseData: function(res){ //res 即为原始返回的数据
+                return {
+                    "code": res.code==1?0:res.code, //解析接口状态
+                    "msg": res.message, //解析提示文本
+                    "count": res.data.totalRow, //解析数据长度
+                    "data": res.data.list //解析数据列表
+                };
+            }
+            ,where: {
+                master_id: sel_item.master_id
+            }
+            ,limit: 10
+            ,cols: [[
+                {field:'detail_id', title:'ID', width:60, fixed: 'left', unresize: true, sort: true}
+                ,{field:'detail_name', title:'码表明细', edit: 'text', width:180}
+                ,{field:'detail_code', title:'明细编码', edit: 'text', width:160}
+                ,{field:'add_time', title:'创建日期', width:120}
+                ,{field:'state', title:'状态', width:95, templet: '#switchTpl', unresize: true}
+                ,{fixed: 'right', title:'操作', toolbar: '#toolbar', width:150}
+            ]]
+        });
+
+        //监听性别操作
+        form.on('switch(stateFilter)', function(obj){
+            // layer.tips(this.value + ' ' + this.name + '：'+ obj.elem.checked, obj.othis);
+            $.ajax({
+                url: "setEnumDetailState",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    master_id: sel_item.master_id,
+                    detail_id: this.value,
+                    state: obj.elem.checked
+                },
+                success: function(data) {
+                    layer.msg(data.msg, {time:1000});
+                }
+            });
+            // layer.close();
+        });
+
+        //监听单元格编辑
+        table.on('edit(detailList)', function(obj){
+            var value = obj.value //得到修改后的值
+                ,data = obj.data //得到所在行所有键值
+                ,field = obj.field; //得到字段
+
+        });
+
+        //监听工具条
+        table.on('tool(detailList)', function(obj){
+            var data = obj.data;
+            if(obj.event === 'edit'){//编辑
+                $.ajax({
+                    url: "modifyEnumDetail",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        formData: JSON.stringify(data)
+                    },
+                    success: function(data) {
+                        if(data.code == 1){
+                            table.reload('detailList');
+                        }else{
+                            layer.msg(data.msg);
+                        }
+                    }
+                });
+            }else if(obj.event === 'del'){//删除
+                layer.confirm('确认删除此码表明细？', function(index){
+                    $.ajax({
+                        url: "delEnumDetail",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            master_id: data.master_id,
+                            detail_id: data.detail_id
+                        },
+                        success: function(data) {
+                            if(data.code == 1){
+                                table.reload('detailList');
+                            }else{
+                                layer.msg(data.msg);
+                            }
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+        });
+    }
+    
+    function addDetailData() {
+        if(sel_item == null){
+            layer.msg("请选择操作的码表！");
+            return;
+        }
+        layer.prompt({
+            title: '新码表',
+            formType: 2
+        }, function(value, index){
+            //插入doc_page
+            $.ajax({
+                url: "addEnumDetail",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    master_id: sel_item.master_id,
+                    name: value
+                },
+                success: function(data) {
+                    //刷新树
+                    if(data.code ==1){
+                        table.reload('detailList');
+                    }
+                    layer.close(index);
+                }
+            });
+        });
+    }
+
+</script>
+</body>
+</html>

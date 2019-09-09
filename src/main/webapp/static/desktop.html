@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>功能模块</title>
+    <link rel="stylesheet" href="/asset/layui/css/layui.css">
+
+    <style>
+        body{padding: 20px; /*overflow-y: scroll;*/}
+    </style>
+</head>
+<body>
+
+<div style="padding: 10px; background-color: #F2F2F2;">
+    <div class="layui-row layui-col-space15">
+        #for(module : moduleList)
+        <div class="layui-col-md3" style="text-align: center; cursor: pointer;" onclick="loadMenu(#(module.func_id))">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <img style="width:auto;" src="#(module.func_css)" />
+                </div>
+                <div class="layui-card-header">
+                    #(module.func_name)
+                </div>
+            </div>
+        </div>
+        #end
+    </div>
+</div>
+
+<script src="/asset/layui/layui.js" charset="utf-8"></script>
+
+<script>
+
+    var layer;
+    layui.config({
+        base: '/asset/layui/extend/' //这是自定义模块的路径了
+    }).use(['layer','form'], function(){
+        layer = layui.layer; //弹层
+    })
+
+    /**
+     * 加载菜单
+     */
+    function loadMenu(func_id) {
+        parent.loadMenu(func_id);
+    }
+
+</script>
+</body>
+</html>

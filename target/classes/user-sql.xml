@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sqlGroup name="user">
+	<sql id="getUserList-select">
+		select u.user_id,u.caption,u.login_name,u.add_time,r.role_id,r.role_name,u.state
+	</sql>
+	<sql id="getUserList-from">
+		from sys_users u
+		left join sys_roles r on r.role_id=u.role_id
+	</sql>
+	<sql id="userLoginIdentify">
+		select u.user_id,u.role_id,u.login_name,u.password
+		from sys_users u
+		where u.login_name=? and u.password=?
+	</sql>
+	<sql id="getUserInfo">
+		select u.user_id,u.caption,u.role_id,u.login_name,up.email,up.tel,up.avatar_url
+		from sys_users u
+		left join user_profile up on up.user_id=u.user_id
+		where u.user_id=?
+	</sql>
+</sqlGroup>
+
