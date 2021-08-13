@@ -15,7 +15,7 @@
   <url>http://www.example.com</url>
 
   <properties>
-      <jfinal.version>4.2</jfinal.version>
+      <jfinal.version>4.9.11</jfinal.version>
       <jfinal-weixin.version>2.3</jfinal-weixin.version>
       <junit.version>4.12</junit.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
